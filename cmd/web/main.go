@@ -1,12 +1,17 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
 )
 
 func main() {
+
+	addr := flag.String("addr", ":4000", "HTTP network address")
+	flag.Parse()
+
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/", home)
@@ -21,8 +26,7 @@ func main() {
 	// as the handler for all URL paths that start with "/static"
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-	fmt.Println("http://localhost:4000")
-	fmt.Println("Starting Server on :4000")
-	err := http.ListenAndServe(":4000", mux)
+	fmt.Printf("Starting Server on %s\n", *addr)
+	err := http.ListenAndServe(*addr, mux)
 	log.Fatal(err)
 }
