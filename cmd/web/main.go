@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
+	"os"
 )
 
 func main() {
@@ -12,8 +12,10 @@ func main() {
 	addr := flag.String("addr", ":4000", "HTTP network address")
 	flag.Parse()
 
-	mux := http.NewServeMux()
+	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
+	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
+	mux := http.NewServeMux()
 	mux.HandleFunc("/", home)
 	mux.HandleFunc("/snippet", showSnippet)
 	mux.HandleFunc("/snippet/create", createSnippet)
@@ -26,7 +28,13 @@ func main() {
 	// as the handler for all URL paths that start with "/static"
 	mux.Handle("/static/", http.StripPrefix("/static", fileServer))
 
-	fmt.Printf("Starting Server on %s\n", *addr)
-	err := http.ListenAndServe(*addr, mux)
-	log.Fatal(err)
+	server := &http.Server{
+		Addr: *addr,
+		ErrorLog: errorLog,
+		Handler: mux,
+	}
+
+	infoLog.Printf("Starting Server on %s\n", *addr)
+	err := server.ListenAndServe()
+	errorLog.Fatal(err)
 }
