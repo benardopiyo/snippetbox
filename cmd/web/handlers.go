@@ -15,6 +15,16 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	s, err := app.snippets.Latest()
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	for _, snippet := range s {
+		fmt.Println(w, "%v\n", snippet)
+	}
+
 	files := []string{
 		"./ui/html/home.html",
 		"./ui/html/base.layout.html",
@@ -52,7 +62,25 @@ func  (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "%v", s)
+	data := &templateData{Snippet: s}
+
+	files := []string {
+		"./ui/html/show.page.html",
+		"./ui/html/base.layout.html",
+		"./ui/html/footer.html",
+	}
+
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	err = ts.Execute(w, data)
+	if err != nil {
+		app.serverError(w, err)
+	}
+
 }
 
 func  (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
