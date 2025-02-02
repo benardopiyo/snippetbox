@@ -4,9 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
-	"html/template"
 	"snips/pkg/models"
+	"strconv"
 )
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
@@ -21,31 +20,12 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	for _, snippet := range s {
-		fmt.Println(w, "%v\n", snippet)
-	}
-
-	files := []string{
-		"./ui/html/home.html",
-		"./ui/html/base.layout.html",
-		"./ui/html/footer.html",
-	}
-
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	err = ts.Execute(w, nil)
-	if err != nil {
-		app.serverError(w, err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
+	app.render(w, r, "home.page.html", &templateData{
+		Snippets: s,
+	})
 }
 
-func  (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
+func (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil || id < 1 {
 		app.notFound(w)
@@ -62,28 +42,12 @@ func  (app *application) showSnippet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := &templateData{Snippet: s}
-
-	files := []string {
-		"./ui/html/show.page.html",
-		"./ui/html/base.layout.html",
-		"./ui/html/footer.html",
-	}
-
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	err = ts.Execute(w, data)
-	if err != nil {
-		app.serverError(w, err)
-	}
-
+	app.render(w, r, "show.page.html", &templateData{
+		Snippet: s,
+	})
 }
 
-func  (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
+func (app *application) createSnippet(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.Header().Set("Allow", http.MethodPost)
 		app.clientError(w, http.StatusMethodNotAllowed)
